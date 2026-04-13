@@ -1,137 +1,31 @@
-const shiftDefs = [
-    { name: "Morning D1", color: "#FF6384", tasks: [{n:"Office (3hrs)", h:3}, {n:"Study 1", h:3}, {n:"Study 2", h:1.5}] },
-    { name: "Morning D2", color: "#36A2EB", tasks: [{n:"Office (3hrs)", h:3}, {n:"Study 1", h:3}, {n:"Study 2", h:1.5}] },
-    { name: "Evening D3", color: "#FFCE56", tasks: [{n:"Study 1", h:2.5}, {n:"Study 2", h:3.5}, {n:"Office (3hrs)", h:3}] },
-    { name: "Evening D4", color: "#4BC0C0", tasks: [{n:"Study 1", h:2.5}, {n:"Study 2", h:3.5}, {n:"Office (3hrs)", h:3}] },
-    { name: "Night 1st", color: "#9966FF", tasks: [{n:"Study 1", h:2.5}, {n:"Study 2", h:4.5}, {n:"Office (3hrs)", h:3}] },
-    { name: "Night 2nd", color: "#FF9F40", tasks: [{n:"Study 1", h:3}, {n:"Study 2", h:2.5}, {n:"Office (3hrs)", h:3}] },
-    { name: "Off Day", color: "#95a5a6", tasks: [{n:"Study 1", h:3}, {n:"Study 2", h:2.5}] },
-    { name: "General", color: "#27ae60", tasks: [{n:"Study 1", h:3}, {n:"Study 2", h:3.5}] }
-];
+:root { --bg: #f4f7f9; --card: #ffffff; --text: #2d3436; --accent: #0984e3; --border: #dfe6e9; }
+.dark-theme { --bg: #121212; --card: #1e1e1e; --text: #f5f6fa; --accent: #74b9ff; --border: #353b48; }
 
-let pChart, tChart;
-let swInterval, swSeconds = 0;
+body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; transition: 0.3s; }
+header { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
 
-window.onload = () => {
-    const rotaNum = localStorage.getItem('activeRota') || 1;
-    document.getElementById('current-rota-title').innerText = `Rota ${rotaNum}: Active`;
-    document.getElementById('date-display').innerText = new Date().toDateString();
-    
-    renderUI();
-    initCharts();
-    loadStoredData();
-};
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
+.chart-card { background: var(--card); padding: 15px; border-radius: 12px; height: 280px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
 
-function renderUI() {
-    const container = document.getElementById('schedule-container');
-    container.innerHTML = shiftDefs.map((s, i) => `
-        <section class="shift-card" style="border-top-color: ${s.color}">
-            <h3 style="color: ${s.color}">${s.name}</h3>
-            <table>
-                <thead><tr><th>Task</th><th>Hrs</th><th>Done</th></tr></thead>
-                <tbody>
-                    ${s.tasks.map((t, ti) => `
-                        <tr>
-                            <td>${t.n}</td>
-                            <td>${t.h}h</td>
-                            <td><input type="checkbox" class="t-check" data-shift="${i}" data-hrs="${t.h}" onchange="refreshAnalytics()"></td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        </section>
-    `).join('');
-}
+.rota-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+.shift-card { background: var(--card); padding: 18px; border-radius: 12px; border-top: 5px solid var(--accent); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
-function initCharts() {
-    const pCtx = document.getElementById('progressChart').getContext('2d');
-    const tCtx = document.getElementById('timeChart').getContext('2d');
-    
-    pChart = new Chart(pCtx, {
-        type: 'line',
-        data: { labels: shiftDefs.map(s => s.name), datasets: [{ label: '% Done', data: [], borderColor: '#0984e3', tension: 0.3, fill: true }] },
-        options: { responsive: true, maintainAspectRatio: false }
-    });
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+td { padding: 10px; border-bottom: 1px solid var(--border); font-size: 0.95em; }
 
-    tChart = new Chart(tCtx, {
-        type: 'bar',
-        data: { labels: shiftDefs.map(s => s.name), datasets: [{ label: 'Hours Studied', data: [], backgroundColor: shiftDefs.map(s => s.color) }] },
-        options: { responsive: true, maintainAspectRatio: false }
-    });
-}
+.tool-box { display: inline-flex; align-items: center; background: var(--bg); padding: 5px 12px; border-radius: 8px; gap: 8px; }
+#stopwatch { font-family: monospace; font-size: 1.1em; font-weight: bold; min-width: 80px; }
 
-function refreshAnalytics() {
-    let weeklyTotal = 0;
-    const progressArr = [];
-    const hoursArr = [];
+button { cursor: pointer; border: none; border-radius: 6px; padding: 10px 18px; font-weight: bold; transition: 0.2s; }
+.mini-btn { padding: 6px 12px; font-size: 0.75em; background: var(--accent); color: white; }
+.reset-btn { background: #636e72; }
+.stop-alarm { background: #d63031; animation: blink 1s infinite; }
 
-    shiftDefs.forEach((s, i) => {
-        const totalTasks = document.querySelectorAll(`.t-check[data-shift="${i}"]`);
-        const doneTasks = document.querySelectorAll(`.t-check[data-shift="${i}"]:checked`);
-        let shiftHrs = 0;
-        doneTasks.forEach(c => shiftHrs += parseFloat(c.dataset.hrs));
-        
-        progressArr.push(totalTasks.length ? (doneTasks.length / totalTasks.length) * 100 : 0);
-        hoursArr.push(shiftHrs);
-        weeklyTotal += shiftHrs;
-    });
+@keyframes blink { 50% { opacity: 0.5; } }
 
-    pChart.data.datasets[0].data = progressArr;
-    tChart.data.datasets[0].data = hoursArr;
-    pChart.update(); tChart.update();
-    document.getElementById('weekly-total').innerText = weeklyTotal.toFixed(1);
-}
+.btn-save { background: #27ae60; color: white; }
+.btn-new { background: #e67e22; color: white; }
+.btn-print { background: #34495e; color: white; }
+.stats-summary { margin-bottom: 15px; font-size: 1.2em; font-weight: bold; }
 
-function toggleStopwatch() {
-    const btn = document.getElementById('sw-btn');
-    if (swInterval) {
-        clearInterval(swInterval); swInterval = null; btn.innerText = "Start";
-    } else {
-        swInterval = setInterval(() => {
-            swSeconds++;
-            let h = Math.floor(swSeconds/3600), m = Math.floor((swSeconds%3600)/60), s = swSeconds%60;
-            document.getElementById('stopwatch').innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-        }, 1000);
-        btn.innerText = "Stop";
-    }
-}
-
-function setAlarm() {
-    const target = document.getElementById('alarm-time').value;
-    if(!target) return;
-    alert("Alarm set for " + target);
-    setInterval(() => {
-        const now = new Date();
-        if(`${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}` === target) {
-            document.getElementById('alarm-sound').play();
-        }
-    }, 10000);
-}
-
-function startNewRota() {
-    if(confirm("Archiving this rota. Start fresh page for the next cycle?")) {
-        localStorage.setItem('activeRota', (parseInt(localStorage.getItem('activeRota')||1)+1));
-        localStorage.removeItem('rotaProgress');
-        location.reload();
-    }
-}
-
-function saveData() {
-    const states = Array.from(document.querySelectorAll('.t-check')).map(c => c.checked);
-    localStorage.setItem('rotaProgress', JSON.stringify(states));
-    alert("Progress Saved!");
-}
-
-function loadStoredData() {
-    if (localStorage.getItem('rotaTheme') === 'dark') toggleTheme();
-    const saved = JSON.parse(localStorage.getItem('rotaProgress'));
-    if (saved) {
-        document.querySelectorAll('.t-check').forEach((c, i) => c.checked = saved[i]);
-    }
-    refreshAnalytics();
-}
-
-function toggleTheme() {
-    const isDark = document.body.classList.toggle('dark-theme');
-    localStorage.setItem('rotaTheme', isDark ? 'dark' : 'light');
-}
+@media print { .no-print { display: none !important; } }
