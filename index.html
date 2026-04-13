@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Study Rota System</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="light-theme">
+
+    <header class="no-print">
+        <div class="header-left">
+            <h1 id="current-rota-title">Rota 1: Active</h1>
+            <p id="date-display"></p>
+        </div>
+        <div class="header-right">
+            <div class="tool-box">
+                <span id="stopwatch">00:00:00</span>
+                <button onclick="toggleStopwatch()" id="sw-btn" class="mini-btn">Start</button>
+            </div>
+            <div class="tool-box">
+                <input type="time" id="alarm-time">
+                <button onclick="setAlarm()" class="mini-btn">Set Alarm</button>
+            </div>
+            <button class="theme-btn" onclick="toggleTheme()">🌓 Theme</button>
+        </div>
+    </header>
+
+    <main class="dashboard">
+        <div class="charts-grid no-print">
+            <div class="chart-card">
+                <h3>Rota Completion (%)</h3>
+                <canvas id="progressChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Total Hours Studied</h3>
+                <canvas id="timeChart"></canvas>
+            </div>
+        </div>
+
+        <div class="rota-container" id="schedule-container">
+            </div>
+    </main>
+
+    <footer class="controls no-print">
+        <div class="stats-summary">
+            <span>Total Week Study: <strong id="weekly-total">0</strong> hrs</span>
+        </div>
+        <button class="btn-save" onclick="saveData()">Save Progress</button>
+        <button class="btn-new" onclick="startNewRota()">Start New Rota</button>
+        <button class="btn-print" onclick="window.print()">Print PDF Report</button>
+    </footer>
+
+    <audio id="alarm-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+    <script src="script.js"></script>
+</body>
+</html>
