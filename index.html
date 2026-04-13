@@ -18,10 +18,13 @@
             <div class="tool-box">
                 <span id="stopwatch">00:00:00</span>
                 <button onclick="toggleStopwatch()" id="sw-btn" class="mini-btn">Start</button>
+                <button onclick="resetStopwatch()" class="mini-btn reset-btn">Reset</button>
             </div>
             <div class="tool-box">
                 <input type="time" id="alarm-time">
-                <button onclick="setAlarm()" class="mini-btn">Set Alarm</button>
+                <button onclick="setAlarm()" class="mini-btn">Set</button>
+                <button onclick="resetAlarm()" class="mini-btn reset-btn">Reset</button>
+                <button id="stop-alarm-btn" onclick="stopAlarmSound()" class="mini-btn stop-alarm" style="display:none;">STOP SOUND</button>
             </div>
             <button class="theme-btn" onclick="toggleTheme()">🌓 Theme</button>
         </div>
@@ -38,9 +41,7 @@
                 <canvas id="timeChart"></canvas>
             </div>
         </div>
-
-        <div class="rota-container" id="schedule-container">
-            </div>
+        <div class="rota-container" id="schedule-container"></div>
     </main>
 
     <footer class="controls no-print">
@@ -52,7 +53,7 @@
         <button class="btn-print" onclick="window.print()">Print PDF Report</button>
     </footer>
 
-    <audio id="alarm-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+    <audio id="alarm-sound" loop src="https://actions.google.com/sounds/v1/alarms/alarm_clock_ringing_beeps.ogg"></audio>
     <script src="script.js"></script>
 </body>
 </html>
